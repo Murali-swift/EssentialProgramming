@@ -9,6 +9,7 @@ import Foundation
 class FeedItemsMapper {
     struct Root: Decodable {
         let items: [Item]
+        var feed: [FeedItem] { items.map{$0.item}}
     }
 
     struct Item: Decodable {
@@ -23,11 +24,13 @@ class FeedItemsMapper {
     }
     private static var Ok_200: Int { return 200}
     
-    static func map(_ data:Data, _ response: HTTPURLResponse) throws -> [FeedItem] {
-        guard response.statusCode == Ok_200 else {
-            throw RemoteFeedLoader.Error.invalidData
+    static func map(_ data: Data, _ response: HTTPURLResponse) -> RemoteFeedLoader.Result
+    {
+        guard response.statusCode == Ok_200,  let root = try? JSONDecoder().decode(Root.self, from:data) else {
+            let error = RemoteFeedLoader.Error.invalidData
+            return .failure(error)
         }
-        let root = try JSONDecoder().decode(Root.self, from:data)
-        return root.items.map{$0.item}
+        
+        return .success(root.feed)
     }
 }
