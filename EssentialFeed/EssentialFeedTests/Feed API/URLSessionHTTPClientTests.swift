@@ -8,7 +8,7 @@
 import XCTest
 import EssentialFeed
 
-class URLSessionHTTPClient {
+class URLSessionHTTPClient: HTTPClient {
     private let session: URLSession
     
     init(session: URLSession = .shared) {
@@ -17,7 +17,7 @@ class URLSessionHTTPClient {
     
     struct UnexpectedValuesRepresentation: Error {}
     
-    func get(url: URL, completion:@escaping (HTTPClientResult) -> Void) {
+    func get(from url: URL, completion:@escaping (HTTPClientResult) -> Void) {
         session.dataTask(with: url) { data, response, error in
             if let error {
                 completion(.failure(error))
@@ -52,7 +52,7 @@ class URLSessionHTTPClientTests: XCTestCase {
             exp.fulfill()
         }
         
-        makeSUT().get(url: url) { _ in }
+        makeSUT().get(from: url) { _ in }
         wait(for: [exp], timeout: 1.0)
     }
     
@@ -120,7 +120,7 @@ class URLSessionHTTPClientTests: XCTestCase {
         return Foundation.HTTPURLResponse(url: anyURL(), statusCode: 200, httpVersion: nil, headerFields: nil)!
     }
     
-    private func makeSUT(file: StaticString = #filePath, line: UInt = #line) -> URLSessionHTTPClient {
+    private func makeSUT(file: StaticString = #filePath, line: UInt = #line) -> HTTPClient {
         let sut = URLSessionHTTPClient()
         tractForMemortyLeaks(sut, file: file, line: line)
         return sut
@@ -158,7 +158,7 @@ class URLSessionHTTPClientTests: XCTestCase {
         let exp = expectation(description: "Wait for completion")
         let sut = makeSUT(file:file, line: line)
         var receivedResult: HTTPClientResult!
-        sut.get(url: anyURL()) { result in
+        sut.get(from : anyURL()) { result in
             receivedResult = result
             exp.fulfill()
         }
