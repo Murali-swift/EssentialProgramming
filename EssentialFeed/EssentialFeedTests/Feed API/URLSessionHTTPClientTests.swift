@@ -37,7 +37,7 @@ class URLSessionHTTPClientTests: XCTestCase {
     }
     
     func test_getFromURL_perfomsGETRequestWithURL() {
-        let url = URL(string: "http://any-url.com")!
+        let url = anyURL()
         let exp = expectation(description: "Wait for completion")
         
         URLProtocolStub.observeRequests { request in
@@ -51,12 +51,11 @@ class URLSessionHTTPClientTests: XCTestCase {
     }
     
     func test_getFromURL_failsOnRequestError() {
-        let url = URL(string: "http://any-url.com")!
         let error = NSError(domain: "any error", code: 1)
         URLProtocolStub.stub(data: nil, response: nil, error: error)
             
         let exp = expectation(description: "Wait for completion")
-        makeSUT().get(url: url) { result in
+        makeSUT().get(url: anyURL()) { result in
             switch result {
             case let .failure(receivedError as NSError):
                 XCTAssertEqual(error.domain, receivedError.domain)
@@ -70,6 +69,10 @@ class URLSessionHTTPClientTests: XCTestCase {
     }
     
     //MARK: Helper
+    
+    private func anyURL() -> URL {
+        return URL(string: "http://any-url.com")!
+    }
     
     private func makeSUT(file: StaticString = #filePath, line: UInt = #line) -> URLSessionHTTPClient {
         let sut = URLSessionHTTPClient()
