@@ -32,7 +32,7 @@ class RemoteFeedLoaderTests: XCTestCase {
     
     func test_load_deliversErrorOnClientError() {
         let (sut, client) = makeSut()
-        expect(sut, toCompleteWith: .failure(.connectivity)) {
+        expect(sut, toCompleteWith: .failure(RemoteFeedLoader.Error.connectivity)) {
             let clientError = NSError(domain: "Test", code: 0)
             client.complete(with: clientError)
         }
@@ -42,7 +42,7 @@ class RemoteFeedLoaderTests: XCTestCase {
         let (sut, client) = makeSut()
         let samples = [199, 201, 300, 400, 500].enumerated()
         samples.forEach { index,code in
-            expect(sut, toCompleteWith: .failure(.invalidData)) {
+            expect(sut, toCompleteWith: .failure(RemoteFeedLoader.Error.invalidData)) {
                 let json = makeItemsJSON([])
                 client.complete(withStatus: code, data: json, at: index)
             }
@@ -52,7 +52,7 @@ class RemoteFeedLoaderTests: XCTestCase {
     func test_load_deliversError200HTTPResponseWithInvalidJSON() {
         let (sut, client) = makeSut()
         
-        expect(sut, toCompleteWith: .failure(.invalidData)) {
+        expect(sut, toCompleteWith: .failure(RemoteFeedLoader.Error.invalidData)) {
             let invalidJSON = Data("Invalid JSON".utf8)
             client.complete(withStatus:200, data:invalidJSON)
         }
@@ -127,7 +127,7 @@ class RemoteFeedLoaderTests: XCTestCase {
             switch (receivedResult, expectedResult) {
             case let (.success(receivedItems),.success(expectedResult)):
                 XCTAssertEqual(receivedItems, expectedResult, file:file, line: line)
-            case let (.failure(receivedError), .failure(expectedError)):
+            case let (.failure(receivedError as RemoteFeedLoader.Error), .failure(expectedError as RemoteFeedLoader.Error)):
                 XCTAssertEqual(receivedError, expectedError, file:file, line: line)
             default:
                 XCTFail("expected result \(expectedResult) but got Unexpected result \(receivedResult)", file:file, line: line)
