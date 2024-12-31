@@ -10,8 +10,6 @@ import EssentialFeed
 
 final class EssentialFeedAPIEndToEndTests: XCTestCase {
     
-    
-
     func test_endToEndTestServerGETFeedResult_matchesFixedTestAccountData() {
         switch getFeedResult() {
         case let .success(feed)?:
