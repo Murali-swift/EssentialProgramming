@@ -29,9 +29,18 @@
       "name" : "EssentialFeed"
     },
     "testExecutionOrdering" : "random",
-    "testTimeoutsEnabled" : true
+    "testTimeoutsEnabled" : true,
+    "threadSanitizerEnabled" : true
   },
   "testTargets" : [
+    {
+      "enabled" : false,
+      "target" : {
+        "containerPath" : "container:EssentialFeed.xcodeproj",
+        "identifier" : "04682D812D23D849000F8256",
+        "name" : "EssentialFeedAPIEndToEndTests"
+      }
+    },
     {
       "target" : {
         "containerPath" : "container:EssentialFeed.xcodeproj",
