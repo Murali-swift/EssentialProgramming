@@ -17,8 +17,9 @@ class LocalFeedLoader {
         self.currentDate = currentDate
     }
     
-    func save(feeds: [FeedItem]) {
+    func save(feeds: [FeedItem], completion: @escaping (Error?) -> Void) {
         store.deleteCachedFeed { [unowned self] error in
+            completion(error)
             if error == nil {
                 self.store.insert(feeds, timestamp: self.currentDate())
             }
@@ -65,7 +66,7 @@ class CacheFeedUseCaseTests: XCTestCase {
     func test_save_requestsCacheDeletion() {
         let items = [uniqueItem(),uniqueItem()]
         let (sut,store) = makeSUT()
-        sut.save(feeds: items)
+        sut.save(feeds: items) {_ in}
         
         XCTAssertEqual(store.receivedMessage, [.deleteCachedFeed])
     }
@@ -74,7 +75,7 @@ class CacheFeedUseCaseTests: XCTestCase {
         let items = [uniqueItem(),uniqueItem()]
         let (sut,store) = makeSUT()
         let deletionError = anyNSError()
-        sut.save(feeds: items)
+        sut.save(feeds: items){_ in}
         
         store.completeDeletion(with: deletionError)
         
@@ -86,10 +87,28 @@ class CacheFeedUseCaseTests: XCTestCase {
         let items = [uniqueItem(),uniqueItem()]
         let (sut,store) = makeSUT(currentDate:{timestamp})
         
-        sut.save(feeds: items)
+        sut.save(feeds: items){_ in}
         store.completeDeletionSuccessfully()
         
         XCTAssertEqual(store.receivedMessage, [.deleteCachedFeed, .insert(items,timestamp)])
+    }
+    
+    func test_save_failsOnDeletionError() {
+        let items = [uniqueItem(),uniqueItem()]
+        let (sut,store) = makeSUT()
+        let deletionError = anyNSError()
+        let exp = expectation(description: "wait for save completion")
+        
+        var receivedError: Error?
+        sut.save(feeds: items) { error in
+            receivedError = error
+            exp.fulfill()
+        }
+        
+        store.completeDeletion(with: deletionError)
+        wait(for: [exp], timeout: 1.0)
+        
+        XCTAssertEqual(receivedError as NSError?, deletionError)
     }
     
     //Mark: - Helpers
