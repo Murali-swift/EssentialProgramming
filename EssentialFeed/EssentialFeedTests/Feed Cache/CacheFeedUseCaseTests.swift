@@ -28,46 +28,14 @@ class LocalFeedLoader {
     }
 }
 
-class FeedStore {
-    typealias DeleteCompletion = (Error?) -> Void
+protocol FeedStore {
     typealias InsertionCompletion = (Error?) -> Void
-    typealias FeedData = (items: [FeedItem], timestamp: Date)
-    
-    enum ReceivedMessage: Equatable {
-        case deleteCachedFeed
-        case insert([FeedItem], Date)
-    }
-    
-    private var deletionCompletions = [DeleteCompletion]()
-    private var insertionCompletions = [InsertionCompletion]()
-    private(set) var receivedMessage = [ReceivedMessage]()
-    
-    func deleteCachedFeed(completion: @escaping DeleteCompletion) {
-        deletionCompletions.append(completion)
-        receivedMessage.append(.deleteCachedFeed)
-    }
-    
-    func completeDeletion(with error: NSError, at index: Int = 0) {
-        deletionCompletions[index](error)
-    }
-    
-    func completeDeletionSuccessfully(at index:Int = 0) {
-        deletionCompletions[index](nil)
-    }
-    
-    func completeInsertionSuccessfully(at index:Int = 0) {
-        insertionCompletions[index](nil)
-    }
-    
-    func insert(_ items: [FeedItem], timestamp: Date, completion: @escaping InsertionCompletion) {
-        insertionCompletions.append(completion)
-        receivedMessage.append(.insert(items, timestamp))
-    }
-    
-    func completeInsertion(with error: NSError, at index: Int = 0) {
-        insertionCompletions[index](error)
-    }
+    typealias DeleteCompletion = (Error?) -> Void
+    func deleteCachedFeed(completion: @escaping DeleteCompletion)
+    func insert(_ items: [FeedItem], timestamp: Date, completion: @escaping InsertionCompletion)
 }
+
+
 
 class CacheFeedUseCaseTests: XCTestCase {
     func test_init_doesNotMessageStoreUponCreation() {
@@ -135,8 +103,8 @@ class CacheFeedUseCaseTests: XCTestCase {
     
     //Mark: - Helpers
     
-    private func makeSUT(currentDate: @escaping (() -> Date) = Date.init, file: StaticString = #file, line: UInt = #line) -> (sut: LocalFeedLoader, store: FeedStore) {
-        let store = FeedStore()
+    private func makeSUT(currentDate: @escaping (() -> Date) = Date.init, file: StaticString = #file, line: UInt = #line) -> (sut: LocalFeedLoader, store: FeedStoreSpy) {
+        let store = FeedStoreSpy()
         let sut = LocalFeedLoader(store: store, currentDate: currentDate)
         tractForMemortyLeaks(store,file: file, line: line)
         tractForMemortyLeaks(sut,file: file, line: line)
@@ -168,5 +136,44 @@ class CacheFeedUseCaseTests: XCTestCase {
     
     private func anyNSError() -> NSError {
         return NSError(domain: "any domain", code: 0)
+    }
+    
+    private class FeedStoreSpy: FeedStore {
+        typealias FeedData = (items: [FeedItem], timestamp: Date)
+        
+        enum ReceivedMessage: Equatable {
+            case deleteCachedFeed
+            case insert([FeedItem], Date)
+        }
+        
+        private var deletionCompletions = [DeleteCompletion]()
+        private var insertionCompletions = [InsertionCompletion]()
+        private(set) var receivedMessage = [ReceivedMessage]()
+        
+        func deleteCachedFeed(completion: @escaping DeleteCompletion) {
+            deletionCompletions.append(completion)
+            receivedMessage.append(.deleteCachedFeed)
+        }
+        
+        func completeDeletion(with error: NSError, at index: Int = 0) {
+            deletionCompletions[index](error)
+        }
+        
+        func completeDeletionSuccessfully(at index:Int = 0) {
+            deletionCompletions[index](nil)
+        }
+        
+        func completeInsertionSuccessfully(at index:Int = 0) {
+            insertionCompletions[index](nil)
+        }
+        
+        func insert(_ items: [FeedItem], timestamp: Date, completion: @escaping InsertionCompletion) {
+            insertionCompletions.append(completion)
+            receivedMessage.append(.insert(items, timestamp))
+        }
+        
+        func completeInsertion(with error: NSError, at index: Int = 0) {
+            insertionCompletions[index](error)
+        }
     }
 }
