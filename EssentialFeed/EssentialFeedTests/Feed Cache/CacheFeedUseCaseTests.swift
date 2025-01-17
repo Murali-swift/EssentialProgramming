@@ -15,18 +15,18 @@ class CacheFeedUseCaseTests: XCTestCase {
     }
     
     func test_save_requestsCacheDeletion() {
-        let items = [uniqueItem(),uniqueItem()]
+        let items = uniqueItems()
         let (sut,store) = makeSUT()
-        sut.save(feeds: items) {_ in}
+        sut.save(feeds: items.model) {_ in}
         
         XCTAssertEqual(store.receivedMessage, [.deleteCachedFeed])
     }
     
     func test_save_doesNotRequestCacheInsertionOnDeletionError() {
-        let items = [uniqueItem(),uniqueItem()]
+        let items = uniqueItems()
         let (sut,store) = makeSUT()
         let deletionError = anyNSError()
-        sut.save(feeds: items){_ in}
+        sut.save(feeds: items.model){_ in}
         
         store.completeDeletion(with: deletionError)
         
@@ -35,14 +35,13 @@ class CacheFeedUseCaseTests: XCTestCase {
     
     func test_save_requestNewCacheInsertionWithTimestampOnSuccessfulDeletion() {
         let timestamp = Date()
-        let items = [uniqueItem(),uniqueItem()]
-        let localItems = items.map{LocalFeedItem(id: $0.id, description: $0.description, location: $0.location, imageURL: $0.imageURL)}
+        let items = uniqueItems()
         let (sut,store) = makeSUT(currentDate:{timestamp})
         
-        sut.save(feeds: items){_ in}
+        sut.save(feeds: items.model){_ in}
         store.completeDeletionSuccessfully()
         
-        XCTAssertEqual(store.receivedMessage, [.deleteCachedFeed, .insert(localItems,timestamp)])
+        XCTAssertEqual(store.receivedMessage, [.deleteCachedFeed, .insert(items.local,timestamp)])
     }
     
     func test_save_failsOnDeletionError() {
@@ -127,6 +126,12 @@ class CacheFeedUseCaseTests: XCTestCase {
     
     private func uniqueItem() -> FeedItem {
         return FeedItem(id: UUID(), description: "Any", location: "Any", imageURL: anyURL())
+    }
+    
+    private func uniqueItems() -> (model:[FeedItem],local:[LocalFeedItem]) {
+        let items = [uniqueItem(),uniqueItem()]
+        let localItems = items.map{LocalFeedItem(id: $0.id, description: $0.description, location: $0.location, imageURL: $0.imageURL)}
+        return (items,localItems)
     }
     
     private func anyURL() -> URL {
