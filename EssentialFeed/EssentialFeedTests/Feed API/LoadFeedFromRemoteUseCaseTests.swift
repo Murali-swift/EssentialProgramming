@@ -91,10 +91,10 @@ class LoadFeedFromRemoteUseCaseTests: XCTestCase {
         XCTAssertTrue(capturedResults.isEmpty)
     }
     
-    private func makeItem(id: UUID, description: String? = nil, location: String? = nil, imageURL: URL) -> (model:FeedItem,json:[String:Any]) {
-        let item = FeedItem(id: id, description: description, location: location, imageURL: imageURL)
+    private func makeItem(id: UUID, description: String? = nil, location: String? = nil, imageURL: URL) -> (model:FeedImage,json:[String:Any]) {
+        let item = FeedImage(id: id, description: description, location: location, url: imageURL)
         
-        let json = ["id":item.id.uuidString, "description":item.description, "location":item.location, "image":item.imageURL.absoluteString].reduce(into: [String:Any]()) { (acc , e) in
+        let json = ["id":item.id.uuidString, "description":item.description, "location":item.location, "image":item.url.absoluteString].reduce(into: [String:Any]()) { (acc , e) in
             if let value = e.value { acc[e.key] = value }
         };
         return (item,json)
