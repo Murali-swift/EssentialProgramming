@@ -32,6 +32,18 @@ final class ValidateFeedCacheUseCaseTests: XCTestCase {
         XCTAssertEqual(store.receivedMessage, [.retrieve])
     }
     
+    func test_validateCache_doesNotDeleteLessThanSevenDaysOldCache() {
+        let feed = uniqueImage()
+        let fixedCurrentDate = Date()
+        let lessThanSevenDaysOldTimeStamp = fixedCurrentDate.adding(days:-7).adding(seconds: 1)
+        let (sut,store) = makeSUT(currentDate: {fixedCurrentDate})
+        
+        sut.validateCache()
+        store.completeRetrieval(with: feed.local, timeStamp: lessThanSevenDaysOldTimeStamp)
+        
+        XCTAssertEqual(store.receivedMessage, [.retrieve])
+    }
+    
     //MARK - Helpers
     private func makeSUT(currentDate: @escaping (() -> Date) = Date.init, file: StaticString = #file, line: UInt = #line) -> (sut: LocalFeedLoader, store: FeedStoreSpy) {
         let store = FeedStoreSpy()
@@ -43,5 +55,29 @@ final class ValidateFeedCacheUseCaseTests: XCTestCase {
     
     private func anyNSError() -> NSError {
         return NSError(domain: "any domain", code: 0)
+    }
+    
+    private func anyURL() -> URL {
+        return URL(string: "http://any-url.com")!
+    }
+    
+    private func uniqueImageFeed() -> FeedImage {
+        return FeedImage(id: UUID(), description: "Any", location: "Any", url: anyURL())
+    }
+    
+    private func uniqueImage() -> (model:[FeedImage],local:[LocalFeedImage]) {
+        let items = [uniqueImageFeed(),uniqueImageFeed()]
+        let localItems = items.map{LocalFeedImage(id: $0.id, description: $0.description, location: $0.location, url: $0.url)}
+        return (items,localItems)
+    }
+}
+
+private extension Date {
+    func adding(days:Int) -> Date {
+        return Calendar(identifier: .gregorian).date(byAdding: .day, value: days, to: self)!
+    }
+    
+    func adding(seconds: TimeInterval) -> Date {
+        return self + seconds
     }
 }
