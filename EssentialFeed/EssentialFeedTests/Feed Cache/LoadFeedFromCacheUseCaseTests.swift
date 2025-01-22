@@ -39,7 +39,7 @@ class LoadFeedFromCacheUseCaseTests: XCTestCase {
         }
     }
     
-    func test_load_deliversCachedImnagesOnLessThanSevenDaysOld() {
+    func test_load_deliversCachedImnagesOnNonExpiredCache() {
         let (sut,store) = makeSUT()
 
         expect(sut, toCompletewith: .success([])) {
@@ -47,25 +47,25 @@ class LoadFeedFromCacheUseCaseTests: XCTestCase {
         }
     }
     
-    func test_load_deliversCachedImagesOnLessThanSevenDaysOldCache() {
+    func test_load_deliversCachedImagesOnNonExpiredCache() {
         let feed = uniqueImage()
         let fixedCurrentDate = Date()
-        let lessThanSevenDaysOldTimeStamp = fixedCurrentDate.adding(days:-7).adding(seconds: 1)
+        let nonexpirationTimeStamp = fixedCurrentDate.minusFeedCacheMAXAge().adding(seconds: 1)
         let (sut,store) = makeSUT(currentDate: {fixedCurrentDate})
 
         expect(sut, toCompletewith: .success(feed.model)) {
-            store.completeRetrieval(with: feed.local, timeStamp: lessThanSevenDaysOldTimeStamp)
+            store.completeRetrieval(with: feed.local, timeStamp: nonexpirationTimeStamp)
         }
     }
     
-    func test_load_deliversNoImagesOnSevenDaysOldCache() {
+    func test_load_deliversNoImagesOnCacheExpiration() {
         let feed = uniqueImage()
         let fixedCurrentDate = Date()
-        let lessThanSevenDaysOldTimeStamp = fixedCurrentDate.adding(days:-7)
+        let expirationTimeStamp = fixedCurrentDate.minusFeedCacheMAXAge()
         let (sut,store) = makeSUT(currentDate: {fixedCurrentDate})
 
         expect(sut, toCompletewith: .success([])) {
-            store.completeRetrieval(with: feed.local, timeStamp: lessThanSevenDaysOldTimeStamp)
+            store.completeRetrieval(with: feed.local, timeStamp: expirationTimeStamp)
         }
     }
     
@@ -87,38 +87,38 @@ class LoadFeedFromCacheUseCaseTests: XCTestCase {
         XCTAssertEqual(store.receivedMessage, [.retrieve])
     }
     
-    func test_load_hasNosideEffectOnLessThanSevenDaysOldCache() {
+    func test_load_hasNosideEffectOnNonExpiredCache() {
         let feed = uniqueImage()
         let fixedCurrentDate = Date()
-        let lessThanSevenDaysOldTimeStamp = fixedCurrentDate.adding(days:-7).adding(seconds: 1)
+        let nonExpiredTimeStamp = fixedCurrentDate.minusFeedCacheMAXAge().adding(seconds: 1)
         let (sut,store) = makeSUT(currentDate: {fixedCurrentDate})
         
         sut.load{_ in}
-        store.completeRetrieval(with: feed.local, timeStamp: lessThanSevenDaysOldTimeStamp)
+        store.completeRetrieval(with: feed.local, timeStamp: nonExpiredTimeStamp)
         
         XCTAssertEqual(store.receivedMessage, [.retrieve])
     }
     
-    func test_load_hasNoSideEffectOnSevenDaysOldCache() {
+    func test_load_hasNoSideEffectonExpiredCache() {
         let feed = uniqueImage()
         let fixedCurrentDate = Date()
-        let sevenDaysOldTimeStamp = fixedCurrentDate.adding(days:-7)
+        let expiredTimeStamp = fixedCurrentDate.minusFeedCacheMAXAge()
         let (sut,store) = makeSUT(currentDate: {fixedCurrentDate})
         
         sut.load{_ in}
-        store.completeRetrieval(with: feed.local, timeStamp: sevenDaysOldTimeStamp)
+        store.completeRetrieval(with: feed.local, timeStamp: expiredTimeStamp)
         
         XCTAssertEqual(store.receivedMessage, [.retrieve])
     }
     
-    func test_load_hasNoSideEffectOnMoreThanSevenDaysOldCache() {
+    func test_load_hasNoSideEffectOnExpiredCache() {
         let feed = uniqueImage()
         let fixedCurrentDate = Date()
-        let moreThanSevenDaysOldTimeStamp = fixedCurrentDate.adding(days:-7).adding(seconds: -1)
+        let expiredTimeStamp = fixedCurrentDate.minusFeedCacheMAXAge().adding(seconds: -1)
         let (sut,store) = makeSUT(currentDate: {fixedCurrentDate})
         
         sut.load{_ in}
-        store.completeRetrieval(with: feed.local, timeStamp: moreThanSevenDaysOldTimeStamp)
+        store.completeRetrieval(with: feed.local, timeStamp: expiredTimeStamp)
         
         XCTAssertEqual(store.receivedMessage, [.retrieve])
     }
