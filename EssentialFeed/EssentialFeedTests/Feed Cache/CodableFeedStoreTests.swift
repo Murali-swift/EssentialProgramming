@@ -9,10 +9,39 @@ import XCTest
 import EssentialFeed
 
 class CodabelFeedStore {
-    private struct Cache:Codable {
-        let feeds: [LocalFeedImage]
-        let timestamp: Date
+    
+    private struct CodableFeedImage: Codable {
+        private let id: UUID
+        private let description: String?
+        private let location: String?
+        private let url: URL
+        
+        init(_ image:LocalFeedImage) {
+            id = image.id
+            description = image.description
+            location = image.location
+            url = image.url
+        }
+        
+        var local: LocalFeedImage {
+            return LocalFeedImage(id: id, description: description, location: location, url: url)
+        }
     }
+    
+    private struct Cache:Codable {
+        private let feeds: [CodableFeedImage]
+        let timestamp: Date
+        
+        init(feeds: [CodableFeedImage], timestamp: Date) {
+            self.feeds = feeds
+            self.timestamp = timestamp
+        }
+        
+        var localFeed: [LocalFeedImage] {
+            return feeds.map { $0.local }
+        }
+    }
+    
     private let storeURL = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!.appendingPathComponent("imageFeed.store")
     
     func retrieve(_ completion: @escaping FeedStore.RetrievalCompletion) {
@@ -22,12 +51,13 @@ class CodabelFeedStore {
         
         let decoder = JSONDecoder()
         let cache = try! decoder.decode(Cache.self, from: data)
-        completion(.found(feed: cache.feeds, timestamp: cache.timestamp))
+        completion(.found(feed: cache.localFeed, timestamp: cache.timestamp))
     }
     
     func insert(_ feed: [LocalFeedImage], timestamp: Date, completion: @escaping FeedStore.InsertionCompletion) {
         let encoder = JSONEncoder()
-        let encoded = try! encoder.encode(Cache(feeds: feed, timestamp: timestamp))
+        let cache = Cache(feeds: feed.map(CodableFeedImage.init), timestamp: timestamp)
+        let encoded = try! encoder.encode(cache)
         try! encoded.write(to: storeURL)
         completion(nil)
     }
