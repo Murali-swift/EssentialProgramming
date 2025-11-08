@@ -21,16 +21,16 @@ class URLSessionHTTPClientTests: XCTestCase {
     }
     
     func test_getFromURL_perfomsGETRequestWithURL() {
-        let url = anyURL()
+        let uRLRequest = anyGetURLRequest()
         let exp = expectation(description: "Wait for completion")
         
         URLProtocolStub.observeRequests { request in
-            XCTAssertEqual(request.url, url)
+            XCTAssertEqual(request.url, uRLRequest.url)
             XCTAssertEqual(request.httpMethod, "GET")
             exp.fulfill()
         }
         
-        makeSUT().get(from: url) { _ in }
+        makeSUT().get(from: uRLRequest) { _ in }
         wait(for: [exp], timeout: 1.0)
     }
     
@@ -127,7 +127,7 @@ class URLSessionHTTPClientTests: XCTestCase {
         let exp = expectation(description: "Wait for completion")
         let sut = makeSUT(file:file, line: line)
         var receivedResult: HTTPClientResult!
-        sut.get(from : anyURL()) { result in
+        sut.get(from : anyGetURLRequest()) { result in
             receivedResult = result
             exp.fulfill()
         }

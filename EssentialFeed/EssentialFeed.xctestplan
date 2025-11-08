@@ -34,11 +34,10 @@
   },
   "testTargets" : [
     {
-      "enabled" : false,
       "target" : {
         "containerPath" : "container:EssentialFeed.xcodeproj",
-        "identifier" : "04682D812D23D849000F8256",
-        "name" : "EssentialFeedAPIEndToEndTests"
+        "identifier" : "0454330F2EBDAB180072AC34",
+        "name" : "EssentialFeediOSTests"
       }
     },
     {

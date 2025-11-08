@@ -7,7 +7,7 @@
 import Foundation
 
 public final class RemoteFeedLoader: FeedLoader {
-    private let url: URL
+    private let url: URLRequest
     private let client: HTTPClient
     public enum Error: Swift.Error {
         case connectivity
@@ -15,11 +15,11 @@ public final class RemoteFeedLoader: FeedLoader {
     }
     
     public init(url: URL, client: HTTPClient) {
-        self.url = url
+        self.url = URLRequest(url: url)
         self.client = client
     }
     
-    public typealias Result = LoadFeedResult
+    public typealias Result = FeedLoader.Result
     
     public func load(completion:@escaping (Result) -> Void) {
         client.get(from:url) { [weak self] result in
