@@ -13,15 +13,15 @@ final class EssentialFeedAPIEndToEndTests: XCTestCase {
     func test_endToEndTestServerGETFeedResult_matchesFixedTestAccountData() {
         switch getFeedResult() {
         case let .success(feed)?:
-            XCTAssertEqual(feed.count, 8, "Expected 8 items in the test account feed")
-            XCTAssertEqual(feed[0], expecteditem(at:0))
-            XCTAssertEqual(feed[1], expecteditem(at:1))
-            XCTAssertEqual(feed[2], expecteditem(at:2))
-            XCTAssertEqual(feed[3], expecteditem(at:3))
-            XCTAssertEqual(feed[4], expecteditem(at:4))
-            XCTAssertEqual(feed[5], expecteditem(at:5))
-            XCTAssertEqual(feed[6], expecteditem(at:6))
-            XCTAssertEqual(feed[7], expecteditem(at:7))
+            XCTAssertEqual(feed.count, 8, "Expected 8 images in the test account feed")
+            XCTAssertEqual(feed[0], expectedImage(at:0))
+            XCTAssertEqual(feed[1], expectedImage(at:1))
+            XCTAssertEqual(feed[2], expectedImage(at:2))
+            XCTAssertEqual(feed[3], expectedImage(at:3))
+            XCTAssertEqual(feed[4], expectedImage(at:4))
+            XCTAssertEqual(feed[5], expectedImage(at:5))
+            XCTAssertEqual(feed[6], expectedImage(at:6))
+            XCTAssertEqual(feed[7], expectedImage(at:7))
         case let .failure(error)?:
             XCTFail("Expected successful feed resul, got \(error) instead")
         default:
@@ -29,15 +29,15 @@ final class EssentialFeedAPIEndToEndTests: XCTestCase {
         }
     }
     
-    private func getFeedResult(file: StaticString = #file, line: UInt = #line) -> LoadFeedResult? {
+    private func getFeedResult(file: StaticString = #file, line: UInt = #line) -> FeedLoader.Result? {
         let testServerURL = URL(string: "https://essentialdeveloper.com/feed-case-study/test-api/feed")!
-        let client = URLSessionHTTPClient()
+        let client = URLSessionHTTPClient(session: URLSession(configuration: .ephemeral))
         let loader = RemoteFeedLoader(url: testServerURL, client: client)
-        tractForMemortyLeaks(client,file: file,line:line)
-        tractForMemortyLeaks(loader,file: file,line: line)
+        trackForMemortyLeaks(client,file: file,line:line)
+        trackForMemortyLeaks(loader,file: file,line: line)
         let exp = expectation(description: "Wait for load completion")
         
-        var receivedResult: LoadFeedResult?
+        var receivedResult: FeedLoader.Result?
         loader.load { result in
             receivedResult = result
             exp.fulfill()
@@ -47,11 +47,11 @@ final class EssentialFeedAPIEndToEndTests: XCTestCase {
         return receivedResult
     }
     
-    private func expecteditem(at index: Int) -> FeedItem {
-        return FeedItem(id: id(at:index),
+    private func expectedImage(at index: Int) -> FeedImage {
+        return FeedImage(id: id(at:index),
                         description: description(at: index),
                         location: location(at: index),
-                        imageURL: imageURL(at: index))
+                        url: imageURL(at: index))
     }
     
     private func id(at index: Int) -> UUID {

@@ -8,7 +8,7 @@
 import XCTest
 import EssentialFeed
 
-class RemoteFeedLoaderTests: XCTestCase {
+class LoadFeedFromRemoteUseCaseTests: XCTestCase {
     
     func test_init_doestNotRequestDataFromURL() {
         let (_,client) = makeSut()
@@ -91,10 +91,10 @@ class RemoteFeedLoaderTests: XCTestCase {
         XCTAssertTrue(capturedResults.isEmpty)
     }
     
-    private func makeItem(id: UUID, description: String? = nil, location: String? = nil, imageURL: URL) -> (model:FeedItem,json:[String:Any]) {
-        let item = FeedItem(id: id, description: description, location: location, imageURL: imageURL)
+    private func makeItem(id: UUID, description: String? = nil, location: String? = nil, imageURL: URL) -> (model:FeedImage,json:[String:Any]) {
+        let item = FeedImage(id: id, description: description, location: location, url: imageURL)
         
-        let json = ["id":item.id.uuidString, "description":item.description, "location":item.location, "image":item.imageURL.absoluteString].reduce(into: [String:Any]()) { (acc , e) in
+        let json = ["id":item.id.uuidString, "description":item.description, "location":item.location, "image":item.url.absoluteString].reduce(into: [String:Any]()) { (acc , e) in
             if let value = e.value { acc[e.key] = value }
         };
         return (item,json)
@@ -110,8 +110,8 @@ class RemoteFeedLoaderTests: XCTestCase {
     private func makeSut(url : URL = URL(string: "https://www.google.com")!, file: StaticString = #file, line: UInt = #line) -> (sut: RemoteFeedLoader, client: HTTPClientSpy) {
         let client = HTTPClientSpy()
         let sut = RemoteFeedLoader(url:url, client: client)
-        tractForMemortyLeaks(client)
-        tractForMemortyLeaks(sut)
+        trackForMemortyLeaks(client)
+        trackForMemortyLeaks(sut)
         return (sut, client)
     }
     
@@ -142,8 +142,8 @@ class RemoteFeedLoaderTests: XCTestCase {
             return messages.map({$0.url})
         }
         
-        func get(from url: URL, completion: @escaping (HTTPClientResult) -> Void) {
-            messages.append( (url,completion))
+        func get(from request: URLRequest, completion: @escaping (HTTPClientResult) -> Void) {
+            messages.append( (request.url!,completion))
         }
                 
         func complete(with error: Error, at index: Int = 0) {
